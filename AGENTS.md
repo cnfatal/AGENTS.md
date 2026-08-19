@@ -129,6 +129,18 @@
 - Prefer executable constraints over prose-only rules when practical.
 - Document their purpose and guarantees without duplicating their enforcement.
 
+# Security reasoning
+
+- Define security as a concrete, end-to-end property with a threat, trust
+  boundary, enforcement owner, and observable guarantee. A security label does
+  not prescribe an implementation.
+- Reject indirection, extra configuration, wrappers, manual prerequisites, or
+  responsibility transfer unless they materially improve that property across
+  the complete data and action path.
+- The boundary owner provides the simplest closed workflow and hides internal
+  mechanics. External references require real external ownership and lifecycle;
+  documentation and tests verify the property, not the chosen mechanism.
+
 # No defensive programming
 
 - Defensive programming is strictly prohibited. Do not add guards for

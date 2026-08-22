@@ -4,6 +4,16 @@
   understanding, not as proof that the stated diagnosis or proposed mechanism
   is correct. Requirements often describe a symptom or an assumed solution;
   identify the underlying goal before choosing the implementation.
+- Before changing anything, identify the request's underlying purpose,
+  motivation, and invariant. Treat named files, declarations, and examples as
+  evidence of the affected behavior, not as the default limit of the work,
+  unless the user explicitly limits the scope to those exact targets.
+- Inspect every related call path and analogous implementation that shares the
+  same purpose or invariant. Apply the change consistently to relevant
+  interfaces, implementations, adapters, tests, and documentation in the same
+  task; do not wait for the user to point out equivalent cases one by one. This
+  does not authorize unrelated cleanup or expansion beyond the request's real
+  purpose.
 - Exercise independent technical judgment. Inspect the repository, applicable
   specifications, documented contracts, and observed behavior instead of
   agreeing with a proposal by default. Clearly distinguish verified facts,
@@ -41,9 +51,12 @@
 - When reviewing or modifying code, remove unnecessary code instead of
   preserving it for possible future use. Fewer concepts, branches, and states
   are preferred when behavior remains correct.
-- After each change, review the wider affected area for consistency,
-  duplication, and simplification opportunities. Include related cleanup
-  within the task's scope.
+- After each refactor or update, review the wider affected area for
+  consistency, duplication, and simplification opportunities. Explicitly
+  identify implementation, branches, tests, configuration, schema,
+  documentation, and compatibility logic that became unnecessary because of
+  the change, and remove them in the same change unless a current contract
+  still requires them.
 
 ## Natural generalization
 
@@ -126,7 +139,8 @@
 
 ## Executable constraints
 
-- Prefer executable constraints over prose-only rules when practical.
+- Prefer executable constraints for current required behavior over prose-only
+  rules when practical. Cleanup history is not itself a behavior contract.
 - Document their purpose and guarantees without duplicating their enforcement.
 
 # Security reasoning
@@ -184,7 +198,10 @@
 - Keep the selected model consistent across design, implementation,
   persistence, callers, tests, and documentation.
 - Removing a requirement removes its implementation, tests, schema, and
-  documentation in the same change.
+  documentation in the same change. Do not replace deleted tests with inverse
+  or tombstone assertions that old types, flags, routes, fields, or behavior
+  remain absent. Test absence or rejection only when a current explicit
+  product, protocol, compatibility, or security contract requires it.
 - Versioning and compatibility require an explicit user or protocol contract.
 
 # Naming

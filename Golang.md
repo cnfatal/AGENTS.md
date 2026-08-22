@@ -1,53 +1,35 @@
 # Go coding rules
 
-## Cross-file visibility
+## Exported surface
 
-```go
-// Bad
-type Config struct {
-  name    string
-  enabled bool
-}
-
-// Good
-type Config struct {
-  Name    string
-  Enabled bool
-}
-```
-
-- Any function, method, type, constant, or variable used from a different
-  source file than the file where it is declared must be exported. Do not keep
-  a declaration private merely because Go package visibility allows another
-  file in the same package to access it.
-- Export declarations that define interaction between distinct structures or
-  modules, even when the current declarations happen to be in the same source
-  file. An interaction boundary is part of the package interface and should be
-  named as such.
-- Use an unexported declaration only when its implementation must be hidden.
-  Locality alone is not a reason to make a declaration unexported. When a
-  declaration becomes an interaction boundary, export it, update every caller,
-  and add the documentation required for the exported symbol in the same
-  change.
-- An exception requires a concrete reason such as generated code, a
-  platform-specific file set that forms one implementation, or another clear
-  maintenance constraint. Treat exceptions as uncommon and document the
-  reason near the declaration.
-- During refactoring and review, check cross-file references in both production
-  and test files. Tests in a paired `foo_test.go` file also count as cross-file
-  use; prefer testing through the exported interface rather than relying on
-  package-private declarations.
-- Fields of an exported struct should generally also be exported. If its fields
-  should remain private, first reconsider whether the struct itself should be
-  unexported.
-- Helper functions whose primary purpose is to construct, convert, parse, or
-  otherwise operate on an exported struct should generally also be exported so
-  callers do not have to duplicate that logic. Keep such a helper unexported
-  only when it depends on private invariants or is solely an internal
-  implementation step.
-- Keep a field private inside an exported struct only when a concrete invariant
-  requires controlled construction or mutation; document that reason on the
-  field or struct.
+- Decide visibility from the package interface and caller value, not from file
+  placement. Files organize one package implementation; crossing a file does
+  not by itself justify exporting a declaration.
+- Export a declaration when callers must name, construct, configure, embed,
+  wrap, inspect, or branch on it as part of the supported package interface.
+- Export built-in and default adapters as ordinary concrete types when they
+  occupy an open interface seam. Make their zero value usable when practical,
+  and have constructors return the concrete type so callers can compose or
+  wrap it without losing capabilities.
+- Prefer accepting interfaces and returning concrete types. Return an interface
+  only when the concrete identity is intentionally outside the contract and
+  exposing it would provide no supported caller operation.
+- Keep compiled representations, parser state, reflection metadata, routing,
+  merge machinery, caches, and other invariant-bearing implementation details
+  unexported, even when several files in the package collaborate through them.
+- An exported struct should normally expose the fields callers are expected to
+  configure. Keep fields private only when direct construction or mutation
+  would bypass an invariant; document that invariant on the type or field.
+- Do not mechanically comment every exported struct field. A field whose name,
+  type, tags, and containing type already make its meaning obvious needs no
+  comment. Add a field comment only for a non-obvious contract such as zero or
+  nil semantics, units, ownership, security boundaries, or invariants that the
+  declaration itself cannot express.
+- Export constructors and operations needed to use an exported type without
+  duplicating package logic. Do not export implementation helpers merely to
+  make package-internal reuse visible.
+- Treat every exported declaration as a compatibility commitment. Document it
+  and test its observable behavior through an external-package test.
 
 ## Package organization
 
@@ -89,11 +71,71 @@ type Config struct {
   newly created low-content Go files. Pair and justify them or merge their
   contents into the appropriate domain file.
 
+### Program entry points and dependency assembly
+
+```go
+// Forbidden: package variable creates a global singleton.
+var defaultCache = NewCache()
+
+// Forbidden: init performs implicit initialization outside the composition root.
+func init() {
+  RegisterCache(NewCache())
+}
+
+// Each structure declares only the direct dependencies it uses.
+type API struct {
+  Store Store
+  Cache *Cache
+}
+
+type Worker struct {
+  Cache *Cache
+}
+
+type Runtime struct {
+  API    *API
+  Worker *Worker
+}
+
+// Run is the composition root. Options contain configuration, not constructed
+// dependencies. Context controls lifetime; it is not a dependency container.
+func Run(ctx context.Context, options *Options) error {
+  storage, err := NewStore(ctx, options.Store)
+  if err != nil {
+    return err
+  }
+
+  // Shared lifetime does not require a global singleton. Create one instance
+  // here and inject it into every structure that directly depends on it.
+  cache := NewCache(storage)
+
+  target := &Runtime{
+    API:    NewAPI(storage, cache),
+    Worker: NewWorker(cache),
+  }
+  return target.Run(ctx)
+}
+```
+
+- Keep executable `cmd/...` code limited to process configuration, context,
+  logging, error reporting, and dispatch to `Run` or `Run<Role>`.
+- Organize files by the runtime or domain behavior that owns the code. Do not
+  split files mechanically by options, dependencies, constructors, or startup
+  declarations.
+
 ## Code style
 
 - Format Go source with `gofmt`. Its tab indentation is the Go-source
   exception to the global space-indentation rule; Go examples in Markdown use
   spaces.
+
+### Local variables
+
+- Declare every local variable as close as possible to its first use. Do not
+  create stores, result objects, buffers, or other dependencies early when
+  unrelated logic appears before their use. When a value has multiple uses,
+  declare it immediately before the smallest contiguous block containing those
+  uses.
 
 ### Function naming
 
@@ -122,6 +164,110 @@ type Config struct {
   together and separate distinct groups with one blank line.
 - Make each group evident through method names and contracts. Group comments
   carry semantics not expressed by the methods themselves.
+
+### Variadic options
+
+Choose the option representation from its lifecycle and extension semantics.
+Do not assume either a function or an interface is inherently faster; use
+benchmarks and escape analysis for performance claims.
+
+#### Operation options
+
+Operation options are expanded on recurring calls such as Store List, Get,
+Create, Watch, or controller event processing. Model them as open interfaces
+implemented by concrete values:
+
+```go
+type ListOptions struct {
+  Size int
+  Sort string
+}
+
+type ListOption interface {
+  ApplyToList(*ListOptions)
+}
+
+type DefaultSizeOption int
+
+func (option DefaultSizeOption) ApplyToList(options *ListOptions) {
+  if options.Size == 0 {
+    options.Size = int(option)
+  }
+}
+
+func DefaultSize(size int) DefaultSizeOption {
+  return DefaultSizeOption(size)
+}
+```
+
+- Use an exported `ApplyToXxx(*XxxOptions)` method and an exported accumulator
+  when external packages may define operation options. Do not seal the option
+  vocabulary behind a private method or an unexported accumulator.
+- Have constructors return concrete option types. Do not return a captured
+  closure for an operation option.
+- When one semantic option applies to several operations, use one concrete type
+  that implements each applicable `ApplyToXxx` interface.
+- Provide one `ApplyXxxOptions` expansion function per accumulator. Store and
+  adapter implementations use it instead of repeating option loops.
+- Keep option values immutable while applying them. Scalar fields may replace
+  earlier values in declaration order; collection semantics must be explicit.
+
+##### Operation option naming
+
+- Name the accumulator `XxxOptions`, its variadic interface `XxxOption`, the
+  application method `ApplyToXxx`, and the expansion function
+  `ApplyXxxOptions`.
+- Name a concrete option by its semantic setting as `<Stem>Option`. Do not put
+  the target operation in the concrete type or constructor name. One concrete
+  option implements every applicable operation interface.
+- Keep the constructor suffix and concrete type stem identical:
+  `WithSort` returns `SortOption`, `WithFieldRequirements` returns
+  `FieldRequirementsOption`, and `DefaultSize` returns `DefaultSizeOption`.
+- Use `WithXxx` to set, append, or enable a value unconditionally. Use
+  `DefaultXxx` only to fill an omitted value. Use `WithXxxFromYyy` when the
+  constructor converts another representation.
+- Model a boolean capability as a parameterless `WithXxx()`. Do not use
+  `WithXxx(bool)`. Add `WithoutXxx` only when callers currently need an
+  explicit disabling operation.
+- Do not duplicate a shared semantic option as operation-prefixed constructors
+  such as `WithGetResourceVersion` or `WithDeleteResourceVersion`; use one
+  `WithResourceVersion` constructor and implement the applicable interfaces.
+
+#### Construction options
+
+Functional options remain appropriate for low-frequency construction and
+startup configuration when callers intentionally need arbitrary accumulator
+mutation or the option itself can fail:
+
+```go
+// Bad: external packages cannot add or compose options.
+type ProgramOption interface {
+  apply(*programOptions)
+}
+
+// Good: the option vocabulary and accumulator are open.
+type ProgramOptions struct {
+  Sources []Source
+}
+
+type ProgramOption func(*ProgramOptions)
+
+func WithSources(sources ...Source) ProgramOption {
+  return func(options *ProgramOptions) {
+    options.Sources = sources
+  }
+}
+```
+
+- Use construction functional options only outside recurring request, storage,
+  event, and reconciliation hot paths.
+- Export both the function type and accumulator type, and export the fields
+  that external construction options need to modify.
+- A captured closure in a construction option is acceptable only when its
+  initialization-only lifecycle makes that allocation immaterial or a
+  benchmark demonstrates that it is acceptable.
+- Resolve defaults first, then apply option functions once in declaration
+  order. Keep validation with the module that owns the resulting settings.
 
 ### Error flow
 
@@ -174,3 +320,5 @@ result := builder.
 - Do not manually align chained calls or add tab indentation. Use simple
   continuation indentation and let `gofmt` determine the final whitespace.
 - When touching a compact call chain, reformat the complete chain.
+- Before finishing Go changes, inspect every call chain in the full changed
+  scope; `gofmt` does not expand compact chains.

@@ -8,6 +8,19 @@
   motivation, and invariant. Treat named files, declarations, and examples as
   evidence of the affected behavior, not as the default limit of the work,
   unless the user explicitly limits the scope to those exact targets.
+- Treat requirements in an ongoing conversation as an evolving working model,
+  not as a permanently cumulative list. When the user proposes a materially
+  different direction, re-evaluate earlier requests and assumptions against
+  the new direction instead of preserving them mechanically.
+- Give the user's current goal and latest coherent requirements priority when
+  they conflict with earlier product or implementation preferences. Use prior
+  requests as context for understanding the problem, not as active constraints,
+  unless the user explicitly keeps them or they express an applicable public
+  contract, specification, security property, or data-safety requirement.
+- Do not combine superseded and current designs merely to satisfy the full
+  conversation history. Remove or revise work that only served the old
+  direction, and keep the resulting design internally consistent with the
+  current request.
 - Inspect every related call path and analogous implementation that shares the
   same purpose or invariant. Apply the change consistently to relevant
   interfaces, implementations, adapters, tests, and documentation in the same

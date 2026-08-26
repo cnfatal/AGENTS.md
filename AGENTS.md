@@ -265,6 +265,11 @@
   concrete plans and decisions.
 - Keep both documents concise. Record stable facts and necessary rationale;
   remove repetition, implementation narration, speculation, and filler.
+- When repository-wide testing guidance needs a standalone owner, keep it in
+  the repository root `TESTING.md`. Create or update it only for stable,
+  non-obvious guidance shared across modules; do not use it to duplicate
+  executable configuration, narrate individual tests, or hold details owned by
+  one module.
 - Use headings only for distinct topics that benefit navigation. Keep short,
   related content in one section.
 - Update `DESIGN.md` before material changes to a module's interface,

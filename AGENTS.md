@@ -8,6 +8,27 @@
   motivation, and invariant. Treat named files, declarations, and examples as
   evidence of the affected behavior, not as the default limit of the work,
   unless the user explicitly limits the scope to those exact targets.
+- Separate normative requirements from examples. A concrete mechanism may
+  illustrate a rule, but it is not the required design unless its semantics are
+  themselves part of the applicable contract.
+- Before user input becomes a repository contract through code, tests, schemas,
+  configuration, or documentation, verify it against the underlying goal,
+  applicable specifications, repository evidence, and established invariants.
+  Synthesize the accepted semantics in domain vocabulary; user wording,
+  diagnoses, examples, and proposed mechanisms remain source material rather
+  than adopted design.
+- Preserve source wording only when its exact text is required by an applicable
+  contract or the user explicitly requests a quotation. Identify the source and
+  keep quoted material distinct from project decisions.
+- Classify each accepted requirement by lifetime and owner before choosing its
+  artifacts. A task-scoped instruction governs only the current work or its
+  requested output and does not by itself require repository documentation. An
+  observable product contract belongs in implementation, executable tests, and
+  caller documentation where required. A durable design constraint that future
+  maintainers must preserve belongs in the narrowest owning `DESIGN.md`.
+- Let task scope limit persistence, not quality. Any change that remains in the
+  repository must still follow its current design, root-cause, consistency, and
+  cleanup rules.
 - Treat requirements in an ongoing conversation as an evolving working model,
   not as a permanently cumulative list. When the user proposes a materially
   different direction, re-evaluate earlier requests and assumptions against
@@ -21,12 +42,16 @@
   conversation history. Remove or revise work that only served the old
   direction, and keep the resulting design internally consistent with the
   current request.
-- Inspect every related call path and analogous implementation that shares the
-  same purpose or invariant. Apply the change consistently to relevant
-  interfaces, implementations, adapters, tests, and documentation in the same
-  task; do not wait for the user to point out equivalent cases one by one. This
-  does not authorize unrelated cleanup or expansion beyond the request's real
-  purpose.
+- Treat every code change as a design review of its entire affected area.
+  Inspect every related call path and analogous implementation, then
+  re-evaluate their interfaces, ownership, flows, and abstractions against the
+  current goal and invariants. Existing code remains unchanged only when that
+  review establishes its current shape still belongs to the simplest coherent
+  design, never because preservation is the default.
+- Apply the resulting design consistently to every affected interface,
+  implementation, adapter, test, and document in the same task; do not wait for
+  the user to identify equivalent cases one by one. This does not authorize
+  unrelated cleanup or expansion beyond the request's real purpose.
 - Exercise independent technical judgment. Inspect the repository, applicable
   specifications, documented contracts, and observed behavior instead of
   agreeing with a proposal by default. Clearly distinguish verified facts,
@@ -54,21 +79,29 @@
   required by the current task, an existing public contract, or a protocol the
   code explicitly implements.
 - Before implementing a feature, search the current repository and its existing
-  dependencies for components that already provide the required behavior. Also
-  inspect closely related components that may provide part of the behavior and
-  can be composed or extended.
-- Prefer reusing an existing component over implementing a local replacement.
-  Implement new functionality only after confirming that the available
-  components cannot satisfy the concrete requirement, and record the specific
-  missing capability that makes new code necessary.
-- When reviewing or modifying code, remove unnecessary code instead of
-  preserving it for possible future use. Fewer concepts, branches, and states
-  are preferred when behavior remains correct.
-- After each refactor or update, review the wider affected area for
-  consistency, duplication, and simplification opportunities. Explicitly
-  identify implementation, branches, tests, configuration, schema,
-  documentation, and compatibility logic that became unnecessary because of
-  the change, and remove them in the same change unless a current contract
+  dependencies for modules that already provide the required behavior. Also
+  inspect closely related modules that may provide part of the behavior and can
+  be composed or extended.
+- Choose whether to reuse, deepen, reshape, replace, or remove existing modules
+  from the current semantics and total complexity. Existing code has no
+  preservation preference: reuse it only when its ownership and interface
+  remain correct for the current design, and change it instead of layering
+  around a design that no longer fits.
+- Introduce a new module only after confirming that no existing module can
+  naturally own the required behavior, and record the capability or ownership
+  mismatch that makes the new module necessary.
+- Judge a design by total system complexity: code, concepts, runtime branches,
+  states, authoritative execution paths, interface knowledge, and caller
+  coordination. Complexity may concentrate inside its owning deep module when
+  that makes the system and its callers simpler.
+- When required semantics already have an authoritative implementation, reuse
+  the complete behavior through its interface instead of extracting incidental
+  helpers. Reuse must reduce duplicated decisions and execution paths, not
+  merely duplicate fewer lines.
+- A code change is incomplete until the affected area has been reviewed for
+  consistency, duplication, and simplification. Remove implementation,
+  branches, tests, configuration, schema, documentation, and compatibility
+  logic made unnecessary by the resulting design unless a current contract
   still requires them.
 
 ## Natural generalization
@@ -76,8 +109,12 @@
 - Generalize a required mechanism to the narrowest domain-independent contract
   supported by its actual semantics. If removing the triggering domain noun
   leaves the operation, invariants, and failure modes unchanged, place the
-  mechanism in a reusable module; keep domain-specific naming, key construction,
-  authorization, and orchestration in the caller.
+  mechanism in a reusable module; keep domain-specific meaning, policy, and
+  orchestration with their respective owners.
+- Give behavior with the same meaning, invariants, failure modes, and reasons to
+  change one authoritative owner. Keep behavior separate when only its code
+  shape is similar; incidental resemblance does not justify a shared helper or
+  configurable abstraction.
 - Generalization changes ownership and vocabulary, not the amount of behavior
   being implemented. Implement only the operations, guarantees, and adapters
   required by current callers. Do not add neighboring capabilities, options,
@@ -91,32 +128,71 @@
 
 ## Module shape
 
-- Prefer narrow interfaces, stable result types, and descriptive metadata that
-  hide required complexity and can grow without changing existing callers.
-  Judge the design by its total complexity and caller leverage, not by whether
-  every reusable module currently has multiple callers.
-- Prefer direct standard-library operations and concrete types for behavior
-  whose semantics are genuinely local. Do not use this preference to embed a
-  domain-independent mechanism in its first caller. Extract a helper only when
-  it removes meaningful duplication or names a real domain operation. Do not
-  hide a short, obvious operation behind a generic utility.
+- Organize implementation into deep modules: each module owns a cohesive
+  capability and its invariants behind the smallest practical interface. Judge
+  depth by caller leverage, not implementation size or the number of callers.
+- Hide required internal steps, ordering, and mechanisms that callers do not
+  need to use the module correctly. Expose stable domain results and metadata
+  when callers need them to decide what to do next; do not expose raw adapter
+  or protocol details.
+- Minimize the knowledge, coordination, and mutable state shared between
+  modules rather than mechanically minimizing dependency counts. A dependency
+  must represent a real capability reached through its owner's interface.
+- Implement behavior directly when its semantics and variation are genuinely
+  local. Do not use this preference to embed a domain-independent mechanism in
+  its first caller. Extract a helper only when it removes meaningful
+  duplication or names a real domain operation. Do not hide a short, obvious
+  operation behind a generic utility.
 - Inline a small helper that has only one caller. Extract a single-caller
   helper when it names a stable domain operation, creates a useful seam, or
   materially shortens and clarifies the caller. Compatibility wrappers,
   aliases, and forwarding helpers still require a current external contract;
   extensibility alone does not justify them.
-- Keep functions linear and small. Avoid converting a straightforward
-  operation into a framework, pipeline, runtime, strategy, or configurable
-  subsystem unless the current requirements demand those semantics.
+- Remove shallow modules that only forward calls, expose internal phases, or
+  make callers coordinate invariants owned by the module.
 
 ## Authority, ownership, and dependency direction
 
 - Give each capability one authoritative interface and owner.
+- Place each guarantee with the narrowest module that can own it completely so
+  every caller receives it without reproducing its implementation.
 - Cross modules through owned interfaces, not implementation details.
 - Direct dependencies toward stable interfaces. A cycle signals misplaced
   ownership or a misplaced seam.
 - Keep mechanics, invariants, and policy with their owners. Callers express
   intent instead of reproducing that complexity.
+
+## Canonical core flow
+
+- Give behavior that shares the same invariants, ordering, effects, consistency
+  guarantees, and failure semantics one authoritative execution path. Identify
+  that path by its semantics, not by entry point or use-case names.
+- Keep entry points thin. Perform only source-specific adaptation before
+  normalizing equivalent inputs into one domain value and converging on the
+  authoritative path. Adapt presentation only after receiving its domain
+  result.
+- Call a module directly for a simple operation that needs no orchestration.
+  Canonical flows may nest through deep modules; they do not require a wrapper
+  per use case or one system-wide orchestrator.
+- Write orchestration as ordinary, explicit, linear, and small domain code that
+  declares what happens and delegates how it happens to deep modules. Introduce
+  a general-purpose orchestration abstraction or runtime variability only when
+  the required semantics need it.
+- Add a feature to the narrowest owner of its semantics. If an existing module
+  already represents that operation, deepen the module instead of exposing a
+  new top-level flow step merely to make the feature visible.
+- Let the owner represent genuine variations through its domain interface and
+  contain the necessary branching behind a stable result. Keep flows separate
+  when their lifecycle, invariants, ordering, effects, consistency guarantees,
+  or failure semantics differ; do not merge semantically different behavior
+  merely to share a flow.
+- Keep behavior that cannot affect a domain result or success condition with
+  its own owner. Put a required effect in the success guarantee of the
+  narrowest module that can own it, while hiding it from callers that do not
+  need to make a decision about it.
+- Give the module that owns an end-to-end invariant responsibility for its
+  complete failure and consistency semantics. Entry points and subordinate
+  modules must not infer global progress and independently recover the flow.
 
 ## Domain and protocol semantics
 
@@ -134,10 +210,6 @@
   behavior, or operations that the specification does not define. Add
   non-standard behavior only when an explicit product requirement defines it
   as an extension, and never present an extension as specification behavior.
-- Normalize different input sources into one canonical domain value before
-  applying business behavior. Input selection may branch where the sources
-  differ, but validation, authorization, and execution must continue through
-  one shared path after normalization.
 
 ## Serialization contracts
 
@@ -167,20 +239,32 @@
 - The boundary owner provides the simplest closed workflow and hides internal
   mechanics. External references require real external ownership and lifecycle;
   documentation and tests verify the property, not the chosen mechanism.
+- Give shared authorization policy one authoritative owner, while the protected
+  operation owns enforcing the policy before the protected effect. The policy
+  may be implemented by another module, but entry-point checks must not be its
+  only enforcement when another path can reach the operation.
 
 # No defensive programming
 
-- Defensive programming is strictly prohibited. Do not add guards for
-  programmer errors or impossible internal states. Let incorrect internal use
-  fail at its natural point.
+- Defensive programming inside the domain is strictly prohibited. Once a
+  module establishes an invariant, internal functions and downstream modules
+  trust it. Let programmer errors and impossible internal states fail at their
+  natural use point, then fix the code that violated the invariant.
 - Do not add speculative nil checks, input normalization, arbitrary limits,
   copies, fallback behavior, retries, recovery, or validation. Such behavior is
   allowed only when required by the public contract, a protocol or security
   boundary, or a reproduced failure.
-- Validate data once at the boundary that owns the validation rule. Do not
-  repeat validation in constructors, helpers, and downstream methods.
-- Trust invariants established by callers and previously completed validation.
-  Do not re-check them throughout the call chain.
+- At an external seam, let its adapter validate only the structure, protocol,
+  and security rules it owns, then map its representation to the owning
+  module's input. Representations owned by an external seam must not leak into
+  the domain.
+- Validate a domain rule once where its owner establishes the domain value. A
+  module interface is a validation seam only when it owns the rule and accepts
+  data that has not already been validated; crossing a module alone does not
+  justify revalidation.
+- Trust values from sources whose owned contracts already establish the
+  required invariants. When a reproduced violation contradicts such a
+  contract, repair its owner rather than adding routine downstream validation.
 - Do not replace errors already produced clearly by the standard library with
   custom pre-validation. Add error context only when it identifies the failed
   domain operation.
@@ -210,11 +294,18 @@
 
 - Keep the selected model consistent across design, implementation,
   persistence, callers, tests, and documentation.
-- Removing a requirement removes its implementation, tests, schema, and
-  documentation in the same change. Do not replace deleted tests with inverse
-  or tombstone assertions that old types, flags, routes, fields, or behavior
-  remain absent. Test absence or rejection only when a current explicit
-  product, protocol, compatibility, or security contract requires it.
+- Keep the working tree as a model of current requirements. When a requirement
+  or feature is removed, remove every artifact whose only purpose was to
+  implement, expose, reject, test, configure, document, migrate, or remember it
+  in the same change.
+- Version control owns ordinary implementation history. Do not preserve removed
+  behavior as deprecated APIs, aliases, stubs, disabled flags, compatibility
+  paths, rejection branches, tombstone tests, comments, examples, schemas, or
+  documentation that only records its removal.
+- Retain an artifact related to removed behavior only when a current explicit
+  public, protocol, security, persistence, or data-lifecycle contract still
+  requires observable behavior. Name that contract and keep only the minimum
+  required mechanism with its owner.
 - Versioning and compatibility require an explicit user or protocol contract.
 
 # Naming
@@ -261,10 +352,16 @@
   contain both `README.md` and `DESIGN.md`.
 - `README.md` is the caller guide: purpose, interface, usage, guarantees, and
   failure modes.
-- `DESIGN.md` is the maintainer guide: goals, seams, ownership, invariants, and
-  concrete plans and decisions.
-- Keep both documents concise. Record stable facts and necessary rationale;
-  remove repetition, implementation narration, speculation, and filler.
+- `DESIGN.md` is the maintainer guide. Record an adopted durable design or a
+  selected plan for a material design change as verified goals, invariants,
+  ownership, seams, decisions, and necessary rationale in the project's domain
+  vocabulary.
+- Exclude request chronology, restated user prompts, unverified diagnoses,
+  examples promoted into rules, and proposed mechanisms that were not adopted.
+  Record a rejected alternative only when its rejection rationale still
+  constrains future decisions.
+- Keep both documents concise, stable, and current. Remove repetition,
+  implementation narration, speculation, and filler.
 - When repository-wide testing guidance needs a standalone owner, keep it in
   the repository root `TESTING.md`. Create or update it only for stable,
   non-obvious guidance shared across modules; do not use it to duplicate

@@ -171,6 +171,35 @@
   normalizing equivalent inputs into one domain value and converging on the
   authoritative path. Adapt presentation only after receiving its domain
   result.
+- Give every domain fact one logical source of truth, one authoritative owner,
+  and one mutation path. Logical authority does not require a single physical
+  representation. Route every command and mutation intent through the owner's
+  interface rather than creating parallel write paths.
+- After establishing an accepted state transition, let the authoritative owner
+  expose the resulting domain fact through its result and, when independent
+  downstream owners require fan-out, through an owned notification or event
+  interface. Publish domain changes, not incidental storage operations.
+- Keep data flow unidirectional: commands and mutation intent flow toward the
+  authoritative owner; results, snapshots, and events flow outward. Treat
+  caches, indexes, views, projections, and replicas as replaceable downstream
+  representations. They may serve reads under an explicit freshness and
+  consistency contract, but they must not decide mutations or write the
+  observed fact back; route requested changes to the owner as commands.
+- Let each observer own its independent reaction. It may update its own derived
+  state or start a distinct flow for a different owned fact, but it must not
+  coordinate other observers, depend on observer order, infer completion of the
+  originating flow, or feed changes back into that flow. Any reaction that
+  affects the originating mutation's validity, result, consistency, or success
+  belongs in the authoritative owner or its explicit canonical flow.
+- Bidirectional state synchronization and feedback loops between modules are
+  prohibited. Do not use paired writers, mutual observers, write-back callbacks,
+  reconciliation loops, last-writer-wins behavior, or availability-based source
+  switching to align duplicated mutable representations. Remove the duplicated
+  authority and converge through the owning interface.
+- When an external protocol requires changes to travel in multiple directions,
+  isolate it in one adapter that owns its mapping, ordering, conflict, and
+  failure semantics. Publish only its accepted canonical result into the domain;
+  the protocol must not create multiple domain sources of truth.
 - Call a module directly for a simple operation that needs no orchestration.
   Canonical flows may nest through deep modules; they do not require a wrapper
   per use case or one system-wide orchestrator.
@@ -186,10 +215,6 @@
   when their lifecycle, invariants, ordering, effects, consistency guarantees,
   or failure semantics differ; do not merge semantically different behavior
   merely to share a flow.
-- Keep behavior that cannot affect a domain result or success condition with
-  its own owner. Put a required effect in the success guarantee of the
-  narrowest module that can own it, while hiding it from callers that do not
-  need to make a decision about it.
 - Give the module that owns an end-to-end invariant responsibility for its
   complete failure and consistency semantics. Entry points and subordinate
   modules must not infer global progress and independently recover the flow.

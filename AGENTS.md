@@ -48,6 +48,17 @@
   current goal and invariants. Existing code remains unchanged only when that
   review establishes its current shape still belongs to the simplest coherent
   design, never because preservation is the default.
+- Before editing, enumerate the affected surface from the owning interface:
+  every exported type, field, and method; every adapter and call path; and the
+  paired tests, `README.md`, and `DESIGN.md`. The review is complete only when
+  each item has been inspected and either changed or affirmatively justified by
+  the current caller contract.
+- Require every public wrapper, nested input, field, and result to carry an
+  independent caller-observable meaning, invariant, or lifecycle. Internal
+  reuse, implementation vocabulary, anticipated backends, and speculative
+  extensibility do not establish caller value. Reshape the complete interface
+  when one exposed concept fails this test, then repeat the affected-surface
+  inventory against the new shape.
 - Apply the resulting design consistently to every affected interface,
   implementation, adapter, test, and document in the same task; do not wait for
   the user to identify equivalent cases one by one. This does not authorize
@@ -381,6 +392,12 @@
   selected plan for a material design change as verified goals, invariants,
   ownership, seams, decisions, and necessary rationale in the project's domain
   vocabulary.
+- Write `README.md` entirely from the caller's required knowledge. Place policy
+  paradigms, algorithms, backend topology, implementation candidates, and
+  design alternatives in `DESIGN.md` unless one is itself an observable caller
+  contract. Audit the exported interface with the same test: when a public
+  field can be explained only through hidden implementation structure, replace
+  it with caller-owned domain semantics or one opaque provider-owned value.
 - Exclude request chronology, restated user prompts, unverified diagnoses,
   examples promoted into rules, and proposed mechanisms that were not adopted.
   Record a rejected alternative only when its rejection rationale still
@@ -419,3 +436,5 @@
 
 - For any task that reads, writes, reviews, or refactors Go code, read and
   follow [Golang.md](./Golang.md) before acting.
+- For any task that reads, writes, reviews, or refactors TypeScript or React
+  code, read and follow [TypeScript.md](./TypeScript.md) before acting.

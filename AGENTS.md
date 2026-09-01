@@ -427,6 +427,22 @@
   created low-content files. Pair and justify them or merge their contents into
   the appropriate domain file.
 
+# Commits
+
+- Keep task-process artifacts outside the repository. Research logs and notes,
+  working plans and checklists, status or handoff summaries, generated reports,
+  and other intermediate documents remain transient even when placed under
+  `docs/`. Keep them in the conversation or an external temporary location;
+  do not stage or commit them.
+- Persist a task finding only when it becomes current, durable knowledge needed
+  to use or maintain the repository. Rewrite that knowledge into its narrowest
+  owning `README.md`, `DESIGN.md`, `TESTING.md`, or `AGENTS.md`; never preserve
+  the investigation or planning process that produced it.
+- Before staging or committing, inspect every added or modified documentation
+  file. The change is ready only when each document owns current, durable
+  repository knowledge; remove every task-process artifact from the working
+  tree and exclude it from the commit.
+
 # Formatting
 
 - Use spaces for indentation, including Markdown code blocks. Follow tabs only

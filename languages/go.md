@@ -1,5 +1,10 @@
 # Go coding rules
 
+Applies to any task that reads, writes, reviews, or refactors Go code in a
+project that adopts these rules. The global [AGENTS.md](../AGENTS.md) provides
+the baseline; more specific project rules take precedence when they conflict.
+Project-specific Go conventions live in the owning repository's `AGENTS.md`.
+
 ## Exported surface
 
 - Decide visibility from the package interface and caller value, not from file

@@ -472,9 +472,12 @@
 - Use spaces for indentation, including Markdown code blocks. Follow tabs only
   where a canonical formatter or file format requires them.
 
-# Language-specific rules
+# Language and framework rules
 
 - For any task that reads, writes, reviews, or refactors Go code, read and
-  follow [Golang.md](./Golang.md) before acting.
-- For any task that reads, writes, reviews, or refactors TypeScript or React
-  code, read and follow [TypeScript.md](./TypeScript.md) before acting.
+  follow [languages/go.md](./languages/go.md) before acting.
+- For any task that reads, writes, reviews, or refactors TypeScript code, read
+  and follow [languages/typescript.md](./languages/typescript.md) before acting.
+- For any task that reads, writes, reviews, or refactors React code, read and
+  follow both [languages/typescript.md](./languages/typescript.md) and
+  [frameworks/react.md](./frameworks/react.md) before acting.

@@ -1,6 +1,6 @@
-# AGENTS 全局规范仓库
+# AGENTS.md 全局规范仓库
 
-通用工程与设计纪律,以及各语言的编码规则。
+通用工程与设计纪律,以及按需加载的语言与框架规则。
 
 ## 规范分层
 
@@ -9,14 +9,16 @@
 | 层级 | 位置 | 职责 |
 | --- | --- | --- |
 | 全局工程纪律 | 本仓库 `AGENTS.md` | 与语言、项目无关的工程与设计纪律 |
-| 语言规则 | 本仓库 `Golang.md` / `TypeScript.md` | 特定语言的编码规则 |
+| 语言规则 | 本仓库 `languages/` | 特定编程语言的编码规则 |
+| 框架规则 | 本仓库 `frameworks/` | 特定框架的跨项目规则 |
 | 项目规范 | 使用方项目的 `AGENTS.md` 等 | 项目特有:入口、命令、架构、业务规则 |
 
 ## 文件索引
 
 - `AGENTS.md` — 全局工程总纲:需求解读、设计原则、安全、无防御编程、根因修复、重构与兼容、命名、文件组织、格式化。
-- `Golang.md` — Go 编码规则。任何读写、审查、重构 Go 代码前必读。
-- `TypeScript.md` — TypeScript / React 编码规则。任何读写、审查、重构前端代码前必读。
+- `languages/go.md` — Go 编码规则。任何读写、审查或重构 Go 代码前必读。
+- `languages/typescript.md` — TypeScript 编码规则。任何读写、审查或重构 TypeScript 代码前必读。
+- `frameworks/react.md` — React 框架规则。React 任务在 TypeScript 规则之上另行加载。
 
 ## 使用方式
 
@@ -27,6 +29,6 @@
 ## 演进规则
 
 - 只收录**跨项目通用**的纪律;任何项目特有规则留在该项目内部。
-- 新增语言规则时,新建 `<Language>.md`,在 `AGENTS.md` 的 "Language-specific rules" 注册,并同步更新本文件索引。
+- 新增语言或框架规则时,在 `languages/` 或 `frameworks/` 中新建以小写名称命名的 Markdown 文件,在 `AGENTS.md` 的 "Language and framework rules" 注册精确触发条件,并同步更新本文件索引。
 - 保持精简与稳定:合并重复、删除过时表述,不累积相互竞争的版本。
 - 提交信息遵循 `docs: <变更摘要>`。

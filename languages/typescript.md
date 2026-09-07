@@ -1,10 +1,9 @@
 # TypeScript coding rules
 
-Applies to any task that reads, writes, reviews, or refactors TypeScript or
-React code in a project that adopts these rules. The global
-[AGENTS.md](./AGENTS.md) provides the baseline; more specific project rules
-take precedence when they conflict. Project-specific frontend conventions (UI
-library, request layer, form library) live in the owning repository's
+Applies to any task that reads, writes, reviews, or refactors TypeScript code in
+a project that adopts these rules. The global [AGENTS.md](../AGENTS.md) provides
+the baseline; more specific project rules take precedence when they conflict.
+Project-specific TypeScript conventions live in the owning repository's
 `AGENTS.md`.
 
 ## Exported surface
@@ -70,46 +69,14 @@ library, request layer, form library) live in the owning repository's
   `Foo.tsx` with `Foo.test.tsx`. Do not create a test file without its
   implementation, and rename or move the test together with the
   implementation.
-- Components own their rendering and local state. Extract a custom hook only
-  when the logic names a real domain operation that is reused or too large for
-  one component; do not create a hook layer mechanically.
 
 ## Code style
 
 - Format with the repository's configured Prettier settings. Indentation uses
   spaces, not tabs.
-- Name functions and hooks by their complete domain operation or returned
-  concept. Avoid vague names such as `process`, `handle`, `fetchData`, or
-  `getInfo` when the name omits the domain object or result.
-- Use one term for one concept consistently across components, hooks, types,
-  tests, and user-facing contracts.
-
-## React
-
-- Use function components and hooks. Keep components declarative: derive
-  displayed state during render from the authoritative source instead of
-  synchronizing state with effects.
-- Prohibit bidirectional state synchronization and feedback loops: no
-  `useEffect` + `setState` mirrors, paired writers, write-back callbacks, or
-  reconciliation loops between components.
-- Keep data flow unidirectional: commands and mutation intent flow toward the
-  owning data layer; results flow outward to render. A child must not write
-  back into the parent's source of truth except through the parent's owned
-  mutation interface.
-- Let each observer own its independent reaction. Do not coordinate sibling
-  effects or infer another flow's completion from local state.
-- Hooks obey the rules of hooks. A dependency-suppression comment must name
-  the verified contract that makes the omission safe.
-
-## Async and data flow
-
-- Route requests through the repository's owned request layer; do not call
-  the raw request executor, `fetch`, or bare `axios` from business code.
-- Handle the states the contract defines (loading, error, data) explicitly at
-  the owner of the fetch; do not hide them behind silent fallbacks.
-- Do not mask races with sleeps, timing margins, or guessed retries. Cancel or
-  ignore stale results through the request layer's owned mechanism, or redesign
-  the seam.
+- Name functions by their complete domain operation or returned concept. Avoid
+  vague names such as `process`, `handle`, `fetchData`, or `getInfo` when the
+  name omits the domain object or result.
 
 ## No defensive programming
 
@@ -130,12 +97,3 @@ library, request layer, form library) live in the owning repository's
 - Define domain types explicitly by hand; do not derive them through type
   operations such as `z.infer`. Keep the schema and the domain type
   consistent, and assert that consistency with a test.
-
-## Testing
-
-- Test observable behavior through the public seam: render the component,
-  interact with it, and assert what the user sees, not implementation details
-  such as internal state or effect ordering.
-- Regression tests must assert the required invariant at the public seam. A
-  passing test does not justify an implementation whose correctness depends on
-  timing, scheduling, or undocumented behavior.

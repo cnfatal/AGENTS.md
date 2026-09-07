@@ -396,8 +396,13 @@
   `README.md`, or module `DESIGN.md`.
 - Consult the nearest `README.md` for a module's usage contract and the nearest
   `DESIGN.md` for its design constraints before work that depends on them.
-- A complete reusable module with a stable interface and implementation must
-  contain both `README.md` and `DESIGN.md`.
+- Create or expand documentation only when callers or maintainers need durable
+  knowledge that code, configuration, tests, and existing documentation do not
+  adequately convey. Prefer updating the narrowest existing document.
+- `README.md` and `DESIGN.md` are optional. A new module or a change to its
+  interface, persistence, lifecycle, or dependencies does not by itself justify
+  creating either file; do not add documents merely to complete a file set or
+  restate upstream documentation and self-evident implementation details.
 - `README.md` is the caller guide: purpose, interface, usage, guarantees, and
   failure modes.
 - `DESIGN.md` is the maintainer guide. Record an adopted durable design or a
@@ -435,10 +440,11 @@
   one module.
 - Use headings only for distinct topics that benefit navigation. Keep short,
   related content in one section.
-- Update `DESIGN.md` before material changes to a module's interface,
-  persistence, lifecycle, or dependencies. Then update code and tests.
-- Reconcile `README.md`, `DESIGN.md`, tests, and implementation in the same
-  change. Remove stale claims.
+- When a material change affects a necessary documented design constraint,
+  update its owning document before implementation. Apply the same necessity
+  test before creating a new document.
+- Reconcile applicable existing documentation, tests, and implementation in
+  the same change. Remove stale claims.
 - Keep rules coherent at each ownership level. Consolidate overlap and remove
   obsolete guidance instead of accumulating competing formulations.
 - Organize files around one cohesive domain or closely related behavior.

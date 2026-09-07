@@ -262,6 +262,22 @@
 
 - Prefer executable constraints for current required behavior over prose-only
   rules when practical. Cleanup history is not itself a behavior contract.
+- Require every regression test to exercise behavior through its owning seam
+  and compare the result with an independent semantic oracle. It must be able
+  to go red when the required behavior breaks, not merely when implementation
+  text is edited.
+- Do not create echo tests that read source, render a template, inspect generated
+  output, or assemble a command only to assert a literal, field, path, flag,
+  registration, or structure copied directly from the implementation. This
+  includes one-off grep, awk, jq, snapshot, and wrapper-script checks whose
+  assertion has no independent semantics. Such a test is justified only when
+  it verifies meaningful branching, composition, schema conformance,
+  compatibility, or a cross-artifact invariant that can fail independently of
+  the declaration it examines.
+- For a declarative-only change with no independent behavioral oracle, use the
+  format's parser, validator, linter, renderer, compiler, or build plus focused
+  review. Do not manufacture a test or permanent test harness merely to restate
+  the declaration.
 - Document their purpose and guarantees without duplicating their enforcement.
 
 # Security reasoning
@@ -304,10 +320,6 @@
 - Do not replace errors already produced clearly by the standard library with
   custom pre-validation. Add error context only when it identifies the failed
   domain operation.
-- Tests must cover required behavior and reproduced failures. Do not create
-  tests solely to justify speculative defensive branches.
-- Test observable behavior and invariants through the public seam rather than
-  incidental implementation details.
 
 # Root-cause fixes only
 
@@ -392,6 +404,18 @@
   selected plan for a material design change as verified goals, invariants,
   ownership, seams, decisions, and necessary rationale in the project's domain
   vocabulary.
+- Write `DESIGN.md` as an implementation-independent specification of the
+  intended system. State the end-state goals, invariants, ownership, seams,
+  observable contracts, and failure semantics that guide implementation. Do
+  not assume or report implementation progress, describe the repository's
+  existing behavior, or infer the design from code. Evaluate implementation
+  separately against the design; keep completion status, gaps, migration
+  progress, and task tracking outside `DESIGN.md`.
+- Keep each `DESIGN.md` within its owning module's boundary. Describe another
+  module only through the input, output, guarantee, or dependency direction the
+  owner requires, and name the external owner of every cross-module guarantee.
+  Do not absorb a neighboring module's policy, implementation, or lifecycle
+  into the document merely to make the local design self-contained.
 - Write `README.md` entirely from the caller's required knowledge. Place policy
   paradigms, algorithms, backend topology, implementation candidates, and
   design alternatives in `DESIGN.md` unless one is itself an observable caller

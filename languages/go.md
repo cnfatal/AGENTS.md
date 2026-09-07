@@ -134,6 +134,40 @@ func Run(ctx context.Context, options *Options) error {
   exception to the global space-indentation rule; Go examples in Markdown use
   spaces.
 
+### Completion checks
+
+- Before finishing a Go change, run the repository's canonical formatting,
+  generation, test, vet, lint, and static-analysis commands that apply to the
+  affected scope. When the repository has no canonical checks, run `gofmt` on
+  changed Go files, `go test ./...`, `go vet ./...`, and a maintained static
+  analyzer compatible with the module's Go version, such as `staticcheck`.
+- Review every diagnostic. Completion requires no unexplained finding in the
+  changed scope; remove unused declarations, unreachable branches, ineffective
+  assignments, stale compatibility code, and helpers orphaned by the change.
+  Fix the owning code rather than suppressing a valid diagnostic.
+- Inspect generated Go and schema artifacts through their owning generator.
+  Regenerate them after source contract changes and verify that a second run
+  produces no diff.
+
+### Supported-version migrations
+
+- Read the supported Go language, toolchain, and dependency versions from the
+  repository's module and build configuration. Write for that declared range;
+  do not preserve compatibility with older versions unless an explicit
+  external contract requires it.
+- Treat deprecation and version-compatibility diagnostics in the affected call
+  path as migration work. Confirm the replacement against the version actually
+  selected by the module, preserve observable semantics, and migrate every
+  equivalent use in the affected scope.
+- A language, toolchain, or dependency migration does not itself authorize
+  narrowing exported names, visibility, or signatures. Preserve the supported
+  public surface unless an explicit versioned contract requires a breaking
+  change.
+- When the supported minimum version advances, remove compatibility branches,
+  wrappers, build constraints, and tests whose only purpose was the previous
+  version. Update generated artifacts and caller documentation when the
+  migration changes an observable contract.
+
 ### Local variables
 
 - Declare every local variable as close as possible to its first use. Do not

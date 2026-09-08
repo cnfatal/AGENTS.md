@@ -141,6 +141,19 @@ func Run(ctx context.Context, options *Options) error {
   affected scope. When the repository has no canonical checks, run `gofmt` on
   changed Go files, `go test ./...`, `go vet ./...`, and a maintained static
   analyzer compatible with the module's Go version, such as `staticcheck`.
+- Also run the official Go `modernize` analyzers on the affected packages,
+  including tests and applicable build tags. Passing tests, `go vet`, or
+  Staticcheck does not establish modernization coverage. Verify the selected
+  tool's available analyzers and enabled checks; `gopls` and `go fix` need not
+  expose or enable the same set. Report unavailable checks as unverified.
+- Review modernization diagnostics or suggested diffs before applying fixes.
+  Apply changes compatible with the supported Go versions and required
+  semantics, then rerun the affected checks.
+- For sequential benchmarks targeting Go 1.24 or newer, prefer `for b.Loop()`
+  where applicable and review `bloop` findings on `b.N` loops. Check timer
+  boundaries and compiler-optimization effects, and rerun affected benchmarks
+  after migration. Preserve `b.RunParallel` semantics and retain a different
+  loop when the benchmark's measured behavior requires it.
 - Review every diagnostic. Completion requires no unexplained finding in the
   changed scope; remove unused declarations, unreachable branches, ineffective
   assignments, stale compatibility code, and helpers orphaned by the change.

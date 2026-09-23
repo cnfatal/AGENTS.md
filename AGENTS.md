@@ -84,15 +84,50 @@
 
 # Design principles
 
-## Required behavior and reuse
+## Simplicity, consistency, and reuse
 
 - The simplest correct implementation is the default. Prioritize behavior
   required by the current task, an existing public contract, or a protocol the
   code explicitly implements.
-- Before implementing a feature, search the current repository and its existing
-  dependencies for modules that already provide the required behavior. Also
-  inspect closely related modules that may provide part of the behavior and can
-  be composed or extended.
+- Judge simplicity by total system complexity: code, concepts, runtime
+  branches, states, authoritative execution paths, interface knowledge, and
+  caller coordination. Fewer lines are a possible result, not an independent
+  goal; complexity may concentrate inside its owning deep module when that
+  makes the system and its callers simpler.
+- Special cases require a concrete business rule, protocol requirement, or
+  verified difference in required behavior. An object's name, position, or
+  first use case alone does not justify different treatment. Remove exceptions
+  without such a basis; route equivalent behavior through the same mechanism.
+- Before adding configuration, branches, or abstractions to solve a problem,
+  first consider removing unnecessary behavior, using the existing default
+  mechanism, or correcting ownership. Preserve required behavior and choose
+  the solution with the least total complexity.
+- For common behavior, start with existing capabilities and their documented
+  configuration. Search the repository, related implementations, standard
+  library, and installed dependencies before designing custom logic.
+- Read the relevant module documentation and the dependency documentation for
+  the actual version in use: supported options, defaults, examples, and limits.
+  Consult official documentation when local material is insufficient; inspect
+  implementation or reproduce behavior when the contract remains unclear.
+  Memory, API names, and an unsuccessful text search do not establish a missing
+  capability.
+- Before substantial custom logic, whenever branches or coordinated state keep
+  growing, and before completion, repeat this evidence-based self-review:
+  1. Which current requirement or reproduced failure makes this logic necessary?
+  2. Is it required behavior or a hypothetical edge case? Implement rare cases
+     only when a current contract or verified failure requires them; rarity
+     does not waive correctness, security, or data-safety requirements.
+  3. Can an existing component, native option, or complete library operation own
+     the behavior? Check correct usage, composition, and suitable supported
+     alternatives before adding interception, synchronization, or compensation.
+  4. What exact capability remains missing, and what is the smallest change at
+     its natural owner that fills only that gap?
+- Proceed with substantial custom logic only after naming the checked existing
+  capabilities and their concrete mismatch in the working explanation. When
+  this review finds an existing solution, remove the redundant custom mechanism;
+  invested effort and passing tests are not reasons to retain it. Keep research
+  and repeated self-review with the agent; ask the user only about unresolved
+  requirements or tradeoffs that materially change the result.
 - Choose whether to reuse, deepen, reshape, replace, or remove existing modules
   from the current semantics and total complexity. Existing code has no
   preservation preference: reuse it only when its ownership and interface
@@ -101,10 +136,6 @@
 - Introduce a new module only after confirming that no existing module can
   naturally own the required behavior, and record the capability or ownership
   mismatch that makes the new module necessary.
-- Judge a design by total system complexity: code, concepts, runtime branches,
-  states, authoritative execution paths, interface knowledge, and caller
-  coordination. Complexity may concentrate inside its owning deep module when
-  that makes the system and its callers simpler.
 - When required semantics already have an authoritative implementation, reuse
   the complete behavior through its interface instead of extracting incidental
   helpers. Reuse must reduce duplicated decisions and execution paths, not
@@ -380,8 +411,8 @@
   repeating a type that is already explicit from the declaration or context.
   Prefer concise role names such as `old`, `current`, `target`, `result`, or
   `existing`. Avoid redundant names such as `currentApplication *Application`,
-  `applicationVersion *ApplicationVersion`, or `applicationIndex
-  *ApplicationIndex` unless the longer name distinguishes multiple values that
+  `applicationVersion *ApplicationVersion`, or `applicationIndex *ApplicationIndex`
+  unless the longer name distinguishes multiple values that
   genuinely have different domain roles.
 - Keep parameter names in interface method declarations. Choose names that
   communicate each parameter's role; do not omit them merely because Go allows

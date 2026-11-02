@@ -404,9 +404,11 @@
   `Options`, such as `ListOrganizationsOptions`.
 - Domain interfaces use inputs, options, and domain results. Transport-specific
   representations use `Request` or `Response` when the wire contract differs.
-- Name persistence representations for their adapter role, such as
-  `StoredOrganization`. Shared adapter contracts are exported; adapter-local
-  representations remain private.
+- Name persistence representations by their resource inside the owning
+  implementation namespace. Distinguish them from domain types through module
+  qualification; follow the backend's type-derived resource naming contract.
+  Shared adapter contracts are exported; adapter-local representations remain
+  private.
 - Name variables and parameters by their role in the local operation, not by
   repeating a type that is already explicit from the declaration or context.
   Prefer concise role names such as `old`, `current`, `target`, `result`, or

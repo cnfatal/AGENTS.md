@@ -78,6 +78,11 @@ Project-specific Go conventions live in the owning repository's `AGENTS.md`.
 
 ### Program entry points and dependency assembly
 
+- Do not define `init()` functions in new code, including production code,
+  tests, generated code, tools, and examples. Perform required setup through
+  explicit constructors or functions called from the composition root; avoid
+  import-time side effects.
+
 ```go
 // Forbidden: package variable creates a global singleton.
 var defaultCache = NewCache()

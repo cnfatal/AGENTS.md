@@ -25,11 +25,17 @@ Project-specific Go conventions live in the owning repository's `AGENTS.md`.
 - An exported struct should normally expose the fields callers are expected to
   configure. Keep fields private only when direct construction or mutation
   would bypass an invariant; document that invariant on the type or field.
-- Do not mechanically comment every exported struct field. A field whose name,
-  type, tags, and containing type already make its meaning obvious needs no
-  comment. Add a field comment only for a non-obvious contract such as zero or
-  nil semantics, units, ownership, security boundaries, or invariants that the
-  declaration itself cannot express.
+- Write Go code comments in English.
+- Document every exported type, interface, function, method, constant, variable,
+  and struct field at its declaration, including each interface method. Begin
+  declaration comments with the declared name and explain its domain meaning
+  and caller contract. Field comments identify references, units, sign rules,
+  allowed values, and zero or omitted semantics where applicable. Embedded
+  fields may refer to the owning type's documented contract.
+- Keep comments concise and semantic: explain what a caller needs to know to
+  use the declaration correctly. Update them with changes to behavior or
+  ownership. Before completing a public-interface change, check all affected
+  declarations and fields for missing or stale comments.
 - Export constructors and operations needed to use an exported type without
   duplicating package logic. Do not export implementation helpers merely to
   make package-internal reuse visible.
@@ -362,20 +368,10 @@ config := Config{
 
 ### Chained calls
 
-```go
-// Bad
-result := builder.WithName("worker").WithEnabled(true).Build()
-
-// Good
-result := builder.
-  WithName("worker").
-  WithEnabled(true).
-  Build()
-```
-
-- In a call chain, put every function or method call on its own line.
-- Do not manually align chained calls or add tab indentation. Use simple
-  continuation indentation and let `gofmt` determine the final whitespace.
-- When touching a compact call chain, reformat the complete chain.
-- Before finishing Go changes, inspect every call chain in the full changed
-  scope; `gofmt` does not expand compact chains.
+- Keep short, readable call chains on one line, including calls such as
+  `log.FromContext(ctx).Error(err, "cache billing account")` and
+  `time.Now().UTC()`.
+- Split a chain across lines when its length or structure harms readability.
+  Choose breaks that expose meaningful stages; format with `gofmt`.
+- When editing a chain, assess the complete expression for readability rather
+  than applying a fixed number of calls per line.
